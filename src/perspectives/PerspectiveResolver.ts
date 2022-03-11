@@ -4,6 +4,7 @@ import { Neighbourhood } from "../neighbourhood/Neighbourhood";
 import { LinkQuery } from "./LinkQuery";
 import { Perspective } from "./Perspective";
 import { PerspectiveHandle } from "./PerspectiveHandle";
+import { PerspectiveLink } from './PerspectiveLink'
 
 const testLink = new LinkExpression()
 testLink.author = "did:ad4m:test"
@@ -120,12 +121,22 @@ export default class PerspectiveResolver {
     }
 
     @Subscription({topics: "", nullable: true})
-    perspectiveLinkAdded(@Arg('uuid') uuid: string): LinkExpression {
-        return testLink
+    perspectiveLinkAdded(): PerspectiveLink {
+        const p = new PerspectiveHandle('00004', 'name')
+        p.name = 'test-perspective-2'
+        p.sharedUrl = 'neighbourhood://Qm12345'
+        p.neighbourhood = new Neighbourhood("language://Qm12345", new Perspective())
+        const pLink = new PerspectiveLink(testLink, p);
+        return pLink
     }
 
     @Subscription({topics: "", nullable: true})
-    perspectiveLinkRemoved(@Arg('uuid') uuid: string): LinkExpression {
-        return testLink
+    perspectiveLinkRemoved(): PerspectiveLink {
+        const p = new PerspectiveHandle('00004', 'name')
+        p.name = 'test-perspective-2'
+        p.sharedUrl = 'neighbourhood://Qm12345'
+        p.neighbourhood = new Neighbourhood("language://Qm12345", new Perspective())
+        const pLink = new PerspectiveLink(testLink, p);
+        return pLink
     }
 }

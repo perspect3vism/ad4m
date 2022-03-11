@@ -403,15 +403,12 @@ describe('Ad4mClient', () => {
 
             await perspective.addListener('link-added', linkAdded)
             await perspective.add({source: 'root', target: 'neighbourhood://Qm12345'})  
-
             expect(linkAdded).toBeCalledTimes(1)
             expect(linkRemoved).toBeCalledTimes(0)
 
             perspective = await ad4mClient.perspective.byUUID('00004')
-
             await perspective.addListener('link-removed', linkRemoved)
             await perspective.add({source: 'root', target: 'neighbourhood://Qm123456'})  
-
             expect(linkAdded).toBeCalledTimes(1)
             expect(linkRemoved).toBeCalledTimes(1)
         })
