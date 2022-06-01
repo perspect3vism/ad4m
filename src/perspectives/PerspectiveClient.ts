@@ -111,6 +111,19 @@ export default class PerspectiveClient {
         return new PerspectiveProxy(perspective, this)
     }
 
+    async fromUrl(url: string): Promise<PerspectiveProxy|null> {
+        const { fromUrl } = unwrapApolloResult(await this.#apolloClient.query({
+            query: gql`query fromUrl($url: String!) {
+                fromUrl(url: $url) {
+                    ${PERSPECTIVE_HANDLE_FIELDS}
+                }
+            }`,
+            variables: { url }
+        }))
+        if(!fromUrl) return null
+        return new PerspectiveProxy(fromUrl, this)
+    }
+
     async snapshotByUUID(uuid: string): Promise<Perspective|null> {
         const { perspectiveSnapshot } = unwrapApolloResult(await this.#apolloClient.query({
             query: gql`query perspectiveSnapshot($uuid: String!) {

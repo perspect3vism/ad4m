@@ -353,6 +353,14 @@ describe('Ad4mClient', () => {
             expect(p.name).toBe('test-perspective-1')
         })
 
+        it('fromUrl() smoke test', async () => {
+            const p1 = await ad4mClient.perspective.fromUrl('neighbourhood://Qm12345')
+            expect(p1.sharedUrl).toBe('neighbourhood://Qm12345')
+            expect(p1.name).toBe('test-perspective-2')
+            const p2 = await ad4mClient.perspective.fromUrl('neighbourhood://Qm67891')
+            expect(p2).toBeNull()
+        })
+
         it('snapshotByUUID() smoke test', async () => {
             const ps = await ad4mClient.perspective.snapshotByUUID('00004')
             expect(ps.links.length).toBe(1)

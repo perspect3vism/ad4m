@@ -44,6 +44,17 @@ export default class PerspectiveResolver {
         return new PerspectiveHandle(uuid, 'test-perspective-1')
     }
 
+    @Query(returns => PerspectiveHandle, {nullable: true})
+    fromUrl(@Arg('url') url: string): PerspectiveHandle|null {
+        if (url === 'neighbourhood://Qm12345') {
+            const perspective = new PerspectiveHandle(url, 'test-perspective-2');
+            perspective.sharedUrl = "neighbourhood://Qm12345";
+            return perspective;
+        }
+
+        return null;
+    }
+
     @Query(returns => Perspective, {nullable: true})
     perspectiveSnapshot(@Arg('uuid') uuid: string): Perspective|null {
         return new Perspective([testLink])
