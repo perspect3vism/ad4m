@@ -5,22 +5,14 @@ import { Neighbourhood } from "../neighbourhood/Neighbourhood";
 import { PerspectiveHandle } from './PerspectiveHandle'
 import { Perspective } from "./Perspective";
 
-type PerspectiveListenerTypes = "link-added" | "link-removed"
-
 export class PerspectiveProxy {
     #handle: PerspectiveHandle
     #client: PerspectiveClient
-    #perspectiveLinkAddedCallbacks: LinkCallback[]
-    #perspectiveLinkRemovedCallbacks: LinkCallback[]
     #executeAction
 
     constructor(handle: PerspectiveHandle, ad4m: PerspectiveClient) {
-        this.#perspectiveLinkAddedCallbacks = []
-        this.#perspectiveLinkRemovedCallbacks = []
         this.#handle = handle
         this.#client = ad4m
-        this.#client.addPerspectiveLinkAddedListener(this.#handle.uuid, this.#perspectiveLinkAddedCallbacks)
-        this.#client.addPerspectiveLinkRemovedListener(this.#handle.uuid, this.#perspectiveLinkRemovedCallbacks)
 
         this.#executeAction = async (actions, expression) => {
             console.log("execute:", actions)
@@ -89,26 +81,6 @@ export class PerspectiveProxy {
 
     async remove(link: LinkExpression) {
         return await this.#client.removeLink(this.#handle.uuid, link)
-    }
-
-    async addListener(type: PerspectiveListenerTypes, cb: LinkCallback) {
-        if (type === 'link-added') {
-            this.#perspectiveLinkAddedCallbacks.push(cb);
-        } else if (type === 'link-removed') {
-            this.#perspectiveLinkRemovedCallbacks.push(cb);
-        }
-    }
-
-    async removeListener(type: PerspectiveListenerTypes, cb: LinkCallback) {
-        if (type === 'link-added') {
-            const index = this.#perspectiveLinkAddedCallbacks.indexOf(cb);
-    
-            this.#perspectiveLinkAddedCallbacks.splice(index, 1);
-        } else if (type === 'link-removed') {
-            const index = this.#perspectiveLinkRemovedCallbacks.indexOf(cb);
-
-            this.#perspectiveLinkRemovedCallbacks.splice(index, 1);
-        }
     }
 
     async snapshot() {

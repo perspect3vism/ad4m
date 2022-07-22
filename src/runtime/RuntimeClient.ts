@@ -25,41 +25,15 @@ export default class RuntimeClient {
     #messageReceivedCallbacks: MessageCallback[]
     #exceptionOccurredCallbacks: ExceptionCallback[]
 
-    constructor(client: ApolloClient<any>) {
+    constructor(client: ApolloClient<any>, subscribe: boolean) {
         this.#apolloClient = client
         this.#messageReceivedCallbacks = []
         this.#exceptionOccurredCallbacks = []
 
-        this.#apolloClient.subscribe({
-            query: gql` subscription {
-                runtimeMessageReceived { ${PERSPECTIVE_EXPRESSION_FIELDS} }
-            }   
-        `}).subscribe({
-            next: result => {
-                this.#messageReceivedCallbacks.forEach(cb => {
-                    cb(result.data.runtimeMessageReceived)
-                })
-            },
-            error: (e) => console.error(e)
-        })
-
-        this.#apolloClient.subscribe({
-            query: gql` subscription {
-                exceptionOccurred {
-                    title
-                    message
-                    type
-                    addon
-                }
-            }`
-        }).subscribe({
-            next: result => {
-                this.#exceptionOccurredCallbacks.forEach(cb => {
-                    cb(result.data.exceptionOccurred)
-                })
-            },
-            error: (e) => console.error(e)
-        })
+        if(subscribe) {
+            this.subscribeMessageReceived()
+            this.subscribeExceptionOccurred()
+        }
     }
 
     async info(): Promise<RuntimeInfo> {
@@ -266,7 +240,42 @@ export default class RuntimeClient {
         this.#messageReceivedCallbacks.push(cb)
     }
 
+    subscribeMessageReceived() {
+        this.#apolloClient.subscribe({
+            query: gql` subscription {
+                runtimeMessageReceived { ${PERSPECTIVE_EXPRESSION_FIELDS} }
+            }   
+        `}).subscribe({
+            next: result => {
+                this.#messageReceivedCallbacks.forEach(cb => {
+                    cb(result.data.runtimeMessageReceived)
+                })
+            },
+            error: (e) => console.error(e)
+        })
+    }
+
     addExceptionCallback(cb: ExceptionCallback) {
         this.#exceptionOccurredCallbacks.push(cb)
+    }
+
+    subscribeExceptionOccurred() {
+        this.#apolloClient.subscribe({
+            query: gql` subscription {
+                exceptionOccurred {
+                    title
+                    message
+                    type
+                    addon
+                }
+            }`
+        }).subscribe({
+            next: result => {
+                this.#exceptionOccurredCallbacks.forEach(cb => {
+                    cb(result.data.exceptionOccurred)
+                })
+            },
+            error: (e) => console.error(e)
+        })
     }
 }

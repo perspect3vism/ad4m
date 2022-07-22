@@ -56,7 +56,7 @@ describe('Ad4mClient', () => {
 
         console.log("GraphQL client connected")
 
-        ad4mClient = new Ad4mClient(apolloClient)
+        ad4mClient = new Ad4mClient(apolloClient, true)
     })
 
     describe('.agent', () => {
@@ -410,45 +410,54 @@ describe('Ad4mClient', () => {
             expect(link.data.target).toBe('lang://Qm123')
         })
 
-        it('addListener() smoke test', async () => {
-            let perspective = await ad4mClient.perspective.byUUID('00004')
-            
-            const linkAdded = jest.fn()
-            const linkRemoved = jest.fn()
-
-            await perspective.addListener('link-added', linkAdded)
-            await perspective.add({source: 'root', target: 'neighbourhood://Qm12345'})  
-
-            expect(linkAdded).toBeCalledTimes(1)
-            expect(linkRemoved).toBeCalledTimes(0)
-
-            perspective = await ad4mClient.perspective.byUUID('00004')
-
-            await perspective.addListener('link-removed', linkRemoved)
-            await perspective.add({source: 'root', target: 'neighbourhood://Qm123456'})  
-
-            expect(linkAdded).toBeCalledTimes(1)
-            expect(linkRemoved).toBeCalledTimes(1)
-        })
-
-        it('removeListener() smoke test', async () => {
-            let perspective = await ad4mClient.perspective.byUUID('00004')
-            
+        it('subscribePerspectiveLinkAdded() smoke test', async () => {
             const linkAdded = jest.fn()
 
-            await perspective.addListener('link-added', linkAdded)
-            await perspective.add({source: 'root', target: 'neighbourhood://Qm12345'})  
+            // addPerspectiveLinkAddedListener
+            let perspective = await ad4mClient.perspective.byUUID('00004')
+            ad4mClient.perspective.subscribePerspectiveLinkAdded('00004')
+            
+            ad4mClient.perspective.addPerspectiveLinkAddedListener('00004', linkAdded)
+            await perspective.add({source: 'root', target: 'neighbourhood://Qm123'})  
 
             expect(linkAdded).toBeCalledTimes(1)
 
+            // addPerspectiveLinkAddedListener
             linkAdded.mockClear();
-            
-            perspective = await ad4mClient.perspective.byUUID('00004')
 
-            await perspective.removeListener('link-added', linkAdded)
-            await perspective.add({source: 'root', target: 'neighbourhood://Qm123456'})  
+            let anotherPerspective = await ad4mClient.perspective.byUUID('00005')
+            ad4mClient.perspective.subscribePerspectiveLinkAdded('00005')
+
+            ad4mClient.perspective.addPerspectiveLinkAddedListener('00005', linkAdded)
+            ad4mClient.perspective.removePerspectiveLinkAddedListener('00005', linkAdded)
+            await perspective.add({source: 'root', target: 'neighbourhood://Qm456'})  
 
             expect(linkAdded).toBeCalledTimes(0)
+        })
+
+        it('subscribePerspectiveLinkRemoved() smoke test', async () => {
+            const linkRemoved = jest.fn()
+
+            // addPerspectiveLinkRemovedListener
+            let perspective = await ad4mClient.perspective.byUUID('00004')
+            ad4mClient.perspective.subscribePerspectiveLinkRemoved('00004')
+
+            ad4mClient.perspective.addPerspectiveLinkRemovedListener('00004', linkRemoved)
+            await perspective.remove({author: '', timestamp: '', proof: {signature: '', key: ''}, data:{source: 'root', target: 'neighbourhood://Qm123'}})
+
+            expect(linkRemoved).toBeCalledTimes(1)
+
+            // removePerspectiveLinkRemovedListener
+            linkRemoved.mockClear();
+
+            let anotherPerspective = await ad4mClient.perspective.byUUID('00005')
+            ad4mClient.perspective.subscribePerspectiveLinkRemoved('00005')
+
+            ad4mClient.perspective.addPerspectiveLinkRemovedListener('00005', linkRemoved)
+            ad4mClient.perspective.removePerspectiveLinkRemovedListener('00005', linkRemoved)
+            await anotherPerspective.remove({author: '', timestamp: '', proof: {signature: '', key: ''}, data:{source: 'root', target: 'neighbourhood://Qm456'}})
+
+            expect(linkRemoved).toBeCalledTimes(0)
         })
 
         it('updateLink() smoke test', async () => {

@@ -56,41 +56,16 @@ export default class AgentClient {
     #updatedCallbacks: AgentUpdatedCallback[]
     #agentStatusChangedCallbacks: AgentStatusChangedCallback[]
     
-    constructor(client: ApolloClient<any>) {
+    constructor(client: ApolloClient<any>, subscribe: boolean) {
         this.#apolloClient = client
         this.#updatedCallbacks = []
         this.#agentStatusChangedCallbacks = []
 
-        this.#apolloClient.subscribe({
-            query: gql` subscription {
-                agentUpdated { ${AGENT_SUBITEMS} }
-            }   
-        `}).subscribe({
-            next: result => {
-                const agent = result.data.agentUpdated
-                this.#updatedCallbacks.forEach(cb => {
-                    cb(agent)
-                })
-            },
-            error: (e) => console.error(e)
-        })
-
-        this.#apolloClient.subscribe({
-            query: gql` subscription {
-                agentStatusChanged { ${AGENT_STATUS_FIELDS} }
-            }   
-        `}).subscribe({
-            next: result => {
-                const agent = result.data.agentStatusChanged
-                this.#agentStatusChangedCallbacks.forEach(cb => {
-                    console.log("Agent status changed: ", agent)
-                    cb(agent)
-                })
-            },
-            error: (e) => console.error(e)
-        })
+        if(subscribe) {
+            this.subscribeAgentUpdated()
+            this.subscribeAgentStatusChanged()
+        }
     }
-
 
     /**
      * Returns the Agent expression of the local agent as it is shared
@@ -268,8 +243,41 @@ export default class AgentClient {
         this.#updatedCallbacks.push(listener)
     }
 
+    subscribeAgentUpdated() {
+        this.#apolloClient.subscribe({
+            query: gql` subscription {
+                agentUpdated { ${AGENT_SUBITEMS} }
+            }   
+        `}).subscribe({
+            next: result => {
+                const agent = result.data.agentUpdated
+                this.#updatedCallbacks.forEach(cb => {
+                    cb(agent)
+                })
+            },
+            error: (e) => console.error(e)
+        })
+    }
+
     addAgentStatusChangedListener(listener) {
         this.#agentStatusChangedCallbacks.push(listener)
+    }
+
+    subscribeAgentStatusChanged() {
+        this.#apolloClient.subscribe({
+            query: gql` subscription {
+                agentStatusChanged { ${AGENT_STATUS_FIELDS} }
+            }   
+        `}).subscribe({
+            next: result => {
+                const agent = result.data.agentStatusChanged
+                this.#agentStatusChangedCallbacks.forEach(cb => {
+                    console.log("Agent status changed: ", agent)
+                    cb(agent)
+                })
+            },
+            error: (e) => console.error(e)
+        })
     }
 
     async requestCapability(appName: string, appDesc: string, appUrl: string, capabilities: string): Promise<string> {
